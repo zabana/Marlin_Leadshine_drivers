@@ -4,7 +4,7 @@
 #ifndef MARLIN_H
 #define MARLIN_H
 
-#define  FORCE_INLINE __attribute__((always_inline)) inline
+#define FORCE_INLINE __attribute__((always_inline)) inline
 
 #include <math.h>
 #include <stdio.h>
@@ -23,10 +23,10 @@
 #include "pins.h"
 
 #ifndef AT90USB
-#define  HardwareSerial_h // trick to disable the standard HWserial
+#define HardwareSerial_h // trick to disable the standard HWserial
 #endif
 
-#if (ARDUINO >= 100)
+#if (ARDUINO >= 100) && !defined(__AVR_ATmega644P__)
 # include "Arduino.h"
 #else
 # include "WProgram.h"
@@ -51,22 +51,22 @@
   #define MYSERIAL MSerial
 #endif
 
-#define SERIAL_PROTOCOL(x) (MYSERIAL.print(x))
-#define SERIAL_PROTOCOL_F(x,y) (MYSERIAL.print(x,y))
-#define SERIAL_PROTOCOLPGM(x) (serialprintPGM(PSTR(x)))
-#define SERIAL_PROTOCOLLN(x) (MYSERIAL.print(x),MYSERIAL.write('\n'))
-#define SERIAL_PROTOCOLLNPGM(x) (serialprintPGM(PSTR(x)),MYSERIAL.write('\n'))
+#define SERIAL_PROTOCOL(x) MYSERIAL.print(x);
+#define SERIAL_PROTOCOL_F(x,y) MYSERIAL.print(x,y);
+#define SERIAL_PROTOCOLPGM(x) serialprintPGM(PSTR(x));
+#define SERIAL_PROTOCOLLN(x) {MYSERIAL.print(x);MYSERIAL.write('\n');}
+#define SERIAL_PROTOCOLLNPGM(x) {serialprintPGM(PSTR(x));MYSERIAL.write('\n');}
 
 
 const char errormagic[] PROGMEM ="Error:";
 const char echomagic[] PROGMEM ="echo:";
-#define SERIAL_ERROR_START (serialprintPGM(errormagic))
+#define SERIAL_ERROR_START serialprintPGM(errormagic);
 #define SERIAL_ERROR(x) SERIAL_PROTOCOL(x)
 #define SERIAL_ERRORPGM(x) SERIAL_PROTOCOLPGM(x)
 #define SERIAL_ERRORLN(x) SERIAL_PROTOCOLLN(x)
 #define SERIAL_ERRORLNPGM(x) SERIAL_PROTOCOLLNPGM(x)
 
-#define SERIAL_ECHO_START (serialprintPGM(echomagic))
+#define SERIAL_ECHO_START serialprintPGM(echomagic);
 #define SERIAL_ECHO(x) SERIAL_PROTOCOL(x)
 #define SERIAL_ECHOPGM(x) SERIAL_PROTOCOLPGM(x)
 #define SERIAL_ECHOLN(x) SERIAL_PROTOCOLLN(x)
@@ -96,32 +96,28 @@ void process_commands();
 
 void manage_inactivity();
 
-#if defined(DUAL_X_CARRIAGE) && defined(X_ENABLE_PIN) && X_ENABLE_PIN > -1 \
-    && defined(X2_ENABLE_PIN) && X2_ENABLE_PIN > -1
-  #define  enable_x() do { WRITE(X_ENABLE_PIN, X_ENABLE_ON); WRITE(X2_ENABLE_PIN, X_ENABLE_ON); } while (0)
-  #define disable_x() do { WRITE(X_ENABLE_PIN,!X_ENABLE_ON); WRITE(X2_ENABLE_PIN,!X_ENABLE_ON); } while (0)
-#elif defined(X_ENABLE_PIN) && X_ENABLE_PIN > -1
-  #define  enable_x() WRITE(X_ENABLE_PIN, X_ENABLE_ON)
+#if X_ENABLE_PIN > -1
+  #define enable_x() WRITE(X_ENABLE_PIN, X_ENABLE_ON)
   #define disable_x() WRITE(X_ENABLE_PIN,!X_ENABLE_ON)
 #else
   #define enable_x() ;
   #define disable_x() ;
 #endif
 
-#if defined(Y_ENABLE_PIN) && Y_ENABLE_PIN > -1
-  #define  enable_y() WRITE(Y_ENABLE_PIN, Y_ENABLE_ON)
+#if Y_ENABLE_PIN > -1
+  #define enable_y() WRITE(Y_ENABLE_PIN, Y_ENABLE_ON)
   #define disable_y() WRITE(Y_ENABLE_PIN,!Y_ENABLE_ON)
 #else
   #define enable_y() ;
   #define disable_y() ;
 #endif
 
-#if defined(Z_ENABLE_PIN) && Z_ENABLE_PIN > -1
+#if Z_ENABLE_PIN > -1
   #ifdef Z_DUAL_STEPPER_DRIVERS
-    #define  enable_z() { WRITE(Z_ENABLE_PIN, Z_ENABLE_ON); WRITE(Z2_ENABLE_PIN, Z_ENABLE_ON); }
+    #define enable_z() { WRITE(Z_ENABLE_PIN, Z_ENABLE_ON); WRITE(Z2_ENABLE_PIN, Z_ENABLE_ON); }
     #define disable_z() { WRITE(Z_ENABLE_PIN,!Z_ENABLE_ON); WRITE(Z2_ENABLE_PIN,!Z_ENABLE_ON); }
   #else
-    #define  enable_z() WRITE(Z_ENABLE_PIN, Z_ENABLE_ON)
+    #define enable_z() WRITE(Z_ENABLE_PIN, Z_ENABLE_ON)
     #define disable_z() WRITE(Z_ENABLE_PIN,!Z_ENABLE_ON)
   #endif
 #else
@@ -130,26 +126,26 @@ void manage_inactivity();
 #endif
 
 #if defined(E0_ENABLE_PIN) && (E0_ENABLE_PIN > -1)
-  #define enable_e0() WRITE(E0_ENABLE_PIN, E_ENABLE_ON)
-  #define disable_e0() WRITE(E0_ENABLE_PIN,!E_ENABLE_ON)
+  #define enable_e0() WRITE(E0_ENABLE_PIN, E0_ENABLE_ON)
+  #define disable_e0() WRITE(E0_ENABLE_PIN,!E0_ENABLE_ON)
 #else
-  #define enable_e0()  /* nothing */
+  #define enable_e0() /* nothing */
   #define disable_e0() /* nothing */
 #endif
 
 #if (EXTRUDERS > 1) && defined(E1_ENABLE_PIN) && (E1_ENABLE_PIN > -1)
-  #define enable_e1() WRITE(E1_ENABLE_PIN, E_ENABLE_ON)
-  #define disable_e1() WRITE(E1_ENABLE_PIN,!E_ENABLE_ON)
+  #define enable_e1() WRITE(E1_ENABLE_PIN, E1_ENABLE_ON)
+  #define disable_e1() WRITE(E1_ENABLE_PIN,!E1_ENABLE_ON)
 #else
-  #define enable_e1()  /* nothing */
+  #define enable_e1() /* nothing */
   #define disable_e1() /* nothing */
 #endif
 
 #if (EXTRUDERS > 2) && defined(E2_ENABLE_PIN) && (E2_ENABLE_PIN > -1)
-  #define enable_e2() WRITE(E2_ENABLE_PIN, E_ENABLE_ON)
-  #define disable_e2() WRITE(E2_ENABLE_PIN,!E_ENABLE_ON)
+  #define enable_e2() WRITE(E2_ENABLE_PIN, E2_ENABLE_ON)
+  #define disable_e2() WRITE(E2_ENABLE_PIN,!E2_ENABLE_ON)
 #else
-  #define enable_e2()  /* nothing */
+  #define enable_e2() /* nothing */
   #define disable_e2() /* nothing */
 #endif
 
@@ -161,10 +157,6 @@ void FlushSerialRequestResend();
 void ClearToSend();
 
 void get_coordinates();
-#ifdef DELTA
-void calculate_delta(float cartesian[3]);
-extern float delta[3];
-#endif
 void prepare_move();
 void kill();
 void Stop();
@@ -181,8 +173,8 @@ void setPwmFrequency(uint8_t pin, int val);
 #endif
 
 #ifndef CRITICAL_SECTION_START
-  #define CRITICAL_SECTION_START  unsigned char _sreg = SREG; cli();
-  #define CRITICAL_SECTION_END    SREG = _sreg;
+  #define CRITICAL_SECTION_START unsigned char _sreg = SREG; cli();
+  #define CRITICAL_SECTION_END SREG = _sreg;
 #endif //CRITICAL_SECTION_START
 
 extern float homing_feedrate[];
@@ -194,14 +186,6 @@ extern float add_homeing[3];
 extern float min_pos[3];
 extern float max_pos[3];
 extern int fanSpeed;
-#ifdef BARICUDA
-extern int ValvePressure;
-extern int EtoPPressure;
-#endif
-
-#ifdef FAN_SOFT_PWM
-extern unsigned char fanSpeedSoftPwm;
-#endif
 
 #ifdef FWRETRACT
 extern bool autoretract_enabled;
